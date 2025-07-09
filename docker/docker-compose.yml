@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  ros2:
+    build: .
+    # restart: no
+    ports:
+      - "3332:3332"
+    volumes:
+      - /home/clay/ros:/home/ros
+      - /home/clay/arachne:/ros2
+    devices:
+
+    tty: true
