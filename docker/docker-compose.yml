@@ -8,6 +8,6 @@ services:
     volumes:
       - /home/clay/ros:/home/ros
       - /home/clay/arachne:/ros2
-    devices:
+    #devices:
 
     tty: true
