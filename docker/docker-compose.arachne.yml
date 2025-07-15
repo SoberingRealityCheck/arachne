@@ -1,0 +1,77 @@
+services:
+ builder:
+   build: .
+   # restart: no
+   container_name: pkg_builder
+   volumes:
+     - /home/clay/ros:/home/ros
+     - /home/clay/arachne:/ros2
+   #devices:
+    # - /dev/ttyUSB0:/dev/ttyUSB0
+   command: >
+       bash -c "apt update && 
+       apt install -y python3-colcon-common-extensions && 
+       cd ros2/ros2_ws && 
+       colcon build && 
+       source install/setup.sh &&
+       colcon test"
+   #environment:
+     #- ROS_DOMAIN_ID=737
+ ros-shell:
+   build: .
+   # restart: no
+   container_name: ros-shell
+   ports: 
+     - "3332:3332"
+   volumes:
+     - /home/clay/ros:/home/ros
+     - /home/clay/arachne:/ros2
+   #devices:
+     # - /dev/ttyUSB0:/dev/ttyUSB0
+   tty: true
+   command: >
+       bash -c "cd ros2/ros2_ws &&  
+       source install/setup.sh && 
+       source /ros_entrypoint.sh &&
+       tail -f /dev/null"
+ 
+ robot-tunnel-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.tunnel-api
+    container_name: arachne-tunnel-api
+    volumes:
+      - /home/clay/ros:/home/ros
+      - /home/clay/arachne:/ros2
+    ports:
+      - "127.0.0.1:8080:8080"  # localhost only
+    environment:
+      - API_KEY=${API_KEY:-your-secure-api-key}
+      - API_PORT=8080  # Explicitly set (same as default)
+    networks:
+      - ros2_network
+    #restart: unless-stopped
+    #command: "tail -f /dev/null"
+    command: >
+      bash -c "cd ros2/ros2_ws && 
+      source install/setup.sh && 
+      source /ros_entrypoint.sh &&
+      ros2 run arachne tunnel_api_node"
+
+ imu:
+    build:
+      context: .
+    container_name: imu-connection
+    volumes:
+      - /home/clay/ros:/home/ros
+      - /home/clay/arachne:/ros2
+      - /dev:/dev  # Mount /dev for hardware access
+    command: >
+      bash -c "cd ros2/ros2_ws && 
+      source install/setup.sh && 
+      source /ros_entrypoint.sh &&
+      ros2 run arachne imu_node"
+
+networks:
+  ros2_network:
+    driver: bridge

@@ -1,0 +1,33 @@
+services:
+ 
+
+ 
+ talker:
+   build: .
+   # restart: no
+   volumes:
+     - /home/clay/ros:/home/ros
+     - /home/clay/arachne:/ros2
+   #devices:
+    # - /dev/ttyUSB0:/dev/ttyUSB0
+   command: >
+       bash -c "cd ros2/ros2_ws &&  
+       source install/setup.sh && 
+       source /ros_entrypoint.sh &&
+       ros2 run testcomms talker"
+ 
+ pub:
+   build: .
+   # restart: no
+   volumes:
+     - /home/clay/ros:/home/ros
+     - /home/clay/arachne:/ros2
+   #devices:
+    # - /dev/ttyUSB0:/dev/ttyUSB0
+   command: >
+       bash -c "cd ros2/ros2_ws &&  
+       source install/setup.sh && 
+       source /ros_entrypoint.sh &&
+       ros2 run testcomms pub"
+ 
+ 
