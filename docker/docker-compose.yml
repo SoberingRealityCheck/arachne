@@ -1,0 +1,162 @@
+services:
+
+ builder:
+   build: .
+   # restart: no
+   container_name: pkg_builder
+   volumes:
+     - /home/clay/ros:/home/ros
+     - /home/clay/arachne:/ros2
+   #devices:
+    # - /dev/ttyUSB0:/dev/ttyUSB0
+   command: >
+       bash -c "apt update && 
+       apt install -y libcap-dev &&
+       cd ros2/ros2_ws && 
+       colcon build && 
+       source install/setup.sh &&
+       colcon test"
+   #environment:
+     #- ROS_DOMAIN_ID=737
+
+ ros-shell:
+   build: .
+   # restart: no
+   container_name: ros-shell
+   ports: 
+     - "3332:3332"
+   volumes:
+     - /home/clay/ros:/home/ros
+     - /home/clay/arachne:/ros2
+   #devices:
+     # - /dev/ttyUSB0:/dev/ttyUSB0
+   tty: true
+   command: >
+       bash -c "cd ros2/ros2_ws &&  
+       source install/setup.sh && 
+       source /ros_entrypoint.sh &&
+       tail -f /dev/null"
+ 
+ network-tunnel-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.tunnel-api
+    restart: unless-stopped
+    container_name: arachne-tunnel-api
+    volumes:
+      - /home/clay/ros:/home/ros
+      - /home/clay/arachne:/ros2
+    ports:
+      - "127.0.0.1:8080:8080"  # localhost only
+    environment:
+      - API_KEY=${API_KEY:-your-secure-api-key}
+      - API_PORT=8080  # Explicitly set (same as default)
+    networks:
+      - ros2_network
+    #restart: unless-stopped
+    #command: "tail -f /dev/null"
+    command: >
+      bash -c "cd ros2/ros2_ws && 
+      source install/setup.sh && 
+      source /ros_entrypoint.sh &&
+      ros2 run arachne tunnel_api_node"
+
+ imu:
+    build:
+      context: .
+    # restart: unless-stopped
+    container_name: imu-connection
+    volumes:
+      - /home/clay/ros:/home/ros
+      - /home/clay/arachne:/ros2
+    devices:  
+      - "/dev/i2c-1:/dev/i2c-1"  
+    command: >
+      bash -c "cd ros2/ros2_ws && 
+      source install/setup.sh && 
+      source /ros_entrypoint.sh &&
+      source ../venv/bin/activate &&
+      ros2 run arachne imu_node"
+
+ rosboard:
+    build:
+      context: .
+    restart: always
+    container_name: rosboard
+    volumes:
+      - /home/clay/ros:/home/ros
+      - /home/clay/arachne:/ros2
+    ports:
+      - "127.0.0.1:8888:8888"  # rosboard webserver is on 8888
+    networks:
+      - ros2_network
+    #command: "tail -f /dev/null"
+    command: >
+      bash -c "cd ros2/ros2_ws && 
+      source install/setup.sh && 
+      source /ros_entrypoint.sh &&
+      cd src/rosboard &&
+      ./run"
+ 
+ robot_state:
+     build:
+       context: .
+     restart: always
+     container_name: robot_state
+     volumes:
+       - /home/clay/ros:/home/ros
+       - /home/clay/arachne:/ros2
+     networks:
+        - ros2_network
+     command: >
+       bash -c "cd ros2/ros2_ws && 
+       source install/setup.sh && 
+       source /ros_entrypoint.sh &&
+       ros2 run arachne robot_state_node"
+
+ camera_feed:
+     build:
+       context: .
+     restart: unless-stopped
+     container_name: camera_feed
+     volumes:
+       - /home/clay/ros:/home/ros
+       - /home/clay/arachne:/ros2
+     devices:
+        - "/dev/video0:/dev/video0"  # Assuming the camera is at /dev/video0
+     networks:
+        - ros2_network
+     command: >
+       bash -c "cd ros2/ros2_ws && 
+       source install/setup.sh && 
+       source /ros_entrypoint.sh &&
+       
+       pip install picamera2 --break-system-packages &&
+       ros2 run arachne camera_feed_node"
+ test_camera:
+    build:
+      context: ./camera
+    restart: unless-stopped
+    container_name: test_camera
+    volumes:
+      - /home/clay/ros:/home/ros
+      - /home/clay/arachne:/ros2
+    devices:
+        - "/dev/video0:/dev/video0"
+        - "/run/udev/:/run/udev/"  # Assuming the camera is at /dev/video0
+    networks:
+        - ros2_network
+    group_add: 
+      - video
+    command: >
+      bash -c "cd ros2/ros2_ws && 
+      source install/setup.sh && 
+      source /ros_entrypoint.sh &&
+      
+      pip install picamera2 --break-system-packages &&
+      ros2 run arachne test_camera_node"
+
+
+networks:
+  ros2_network:
+    driver: bridge

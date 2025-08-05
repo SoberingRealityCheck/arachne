@@ -22,6 +22,9 @@ setup(
         'console_scripts': [
             'tunnel_api_node = arachne.tunnel_api_node:main',
             'imu_node = arachne.imu:main',
+            'message_node = arachne.message:main',
+            'robot_state_node = arachne.state:main',
+            'camera_feed_node = arachne.camera_feed:main',
         ],
     },
 )

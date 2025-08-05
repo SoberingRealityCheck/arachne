@@ -32,12 +32,8 @@ class TunnelAPINode(Node):
         CORS(self.app, 
              origins=["*"],  # Allow all origins
              methods=["GET", "POST", "OPTIONS"],  # Allow specific methods
-             allow_headers=["Content-Type", "X-API-Key"]  # Allow your API key header
              supports_credentials=True
         )
-        
-        # API key for application-level auth
-        self.api_key = os.getenv('API_KEY', 'your-api-key-here')
         
         # Setup routes
         self.setup_routes()
@@ -57,23 +53,7 @@ class TunnelAPINode(Node):
         except json.JSONDecodeError:
             self.get_logger().error('Failed to parse robot state JSON')
 
-    def verify_api_key(self, provided_key):
-        """Simple API key verification"""
-        return provided_key == self.api_key
-
     def setup_routes(self):
-        """Setup Flask routes with CORS support"""
-        
-        @self.app.before_request
-        def before_request():
-            # Skip API key check for OPTIONS requests (CORS preflight)
-            if request.method == 'OPTIONS':
-                return '', 200
-                
-            # Check API key for other requests
-            api_key = request.headers.get('X-API-Key')
-            if not self.verify_api_key(api_key):
-                return jsonify({'error': 'Unauthorized'}), 401
 
         @self.app.route('/api/robot-state', methods=['GET', 'OPTIONS'])
         @cross_origin()

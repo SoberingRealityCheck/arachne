@@ -3,3 +3,6 @@ ros2_ws/log
 ros2_ws/build
 ros2_ws/install
 ros_dockerfiles
+ros2_ws/src/arachne/arachne/lib/pi-camera-in-docker
+ros2_ws/src/arachne/arachne/lib/camera_rpi5_ros2_docker
+ros2_ws/src/rosboard

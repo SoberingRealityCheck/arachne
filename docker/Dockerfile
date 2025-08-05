@@ -40,5 +40,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # setup entrypoint
 COPY ./ros_entrypoint.sh /
 
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# install packages required for camera feed
+RUN apt update \
+    && apt install -y --no-install-recommends \
+    libcap-dev \
+    && apt install -y --no-install-recommends \
+    ros-jazzy-camera-ros
+
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt --break-system-packages
+
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]

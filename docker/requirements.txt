@@ -1,0 +1,6 @@
+smbus2
+tornado
+simplejpeg
+colcon-common-extensions
+ascii-magic
+picamera2
