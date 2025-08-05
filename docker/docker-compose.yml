@@ -28,8 +28,12 @@ services:
    volumes:
      - /home/clay/ros:/home/ros
      - /home/clay/arachne:/ros2
-   #devices:
-     # - /dev/ttyUSB0:/dev/ttyUSB0
+     - /dev:/dev  # Mount /dev for hardware access
+  
+   devices:
+     - /dev/ttyUSB0:/dev/ttyUSB0
+     - "/dev/video0:/dev/video0" 
+   privileged: true  # Required for camera access
    tty: true
    command: >
        bash -c "cd ros2/ros2_ws &&  
@@ -122,6 +126,7 @@ services:
      volumes:
        - /home/clay/ros:/home/ros
        - /home/clay/arachne:/ros2
+       - /dev:/dev  # Mount /dev for hardware access
      devices:
         - "/dev/video0:/dev/video0"  # Assuming the camera is at /dev/video0
      networks:
@@ -130,9 +135,10 @@ services:
        bash -c "cd ros2/ros2_ws && 
        source install/setup.sh && 
        source /ros_entrypoint.sh &&
-       
-       pip install picamera2 --break-system-packages &&
-       ros2 run arachne camera_feed_node"
+       ros2 run arachne camera_node"
+      # pip install picamera2 --break-system-packages &&
+      # ros2 run arachne camera_feed_node"
+     privileged: true  # Required for camera access
  test_camera:
     build:
       context: ./camera

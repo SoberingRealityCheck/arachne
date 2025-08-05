@@ -24,7 +24,7 @@ setup(
             'imu_node = arachne.imu:main',
             'message_node = arachne.message:main',
             'robot_state_node = arachne.state:main',
-            'camera_feed_node = arachne.camera_feed:main',
+            'camera_node = arachne.camera_feed:main',
         ],
     },
 )

@@ -13,6 +13,7 @@ Outputs: Published camera feed image to 'camera_feed' topic
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
+from std_msgs.msg import String
 from picamera2 import Picamera2, Preview
 from ascii_magic import AsciiArt
 
@@ -33,7 +34,7 @@ class CameraFeedNode(Node):
     
     def publish_camera_feed(self):
         try:
-            self.image = self.picamera2.capture_array()
+            image = self.picamera2.capture_array()
             msg = Image()
             msg.height = image.shape[0]
             msg.width = image.shape[1]
@@ -44,7 +45,7 @@ class CameraFeedNode(Node):
             self.get_logger().info('Published camera feed')
             
             # For Funsies: Conversion to ascii art
-            ascii_image = self.ascii_ify(self.image)
+            ascii_image = self.ascii_ify(image)
             self.publisher_ascii_.publish(ascii_image)
             self.get_logger().info('Published ASCII art representation of camera feed')
 
@@ -66,19 +67,6 @@ def main():
     finally:
         node.destroy_node()
         rclpy.shutdown()
-
-if __name__ == '__main__':
-    main()'''
-Node name: camera_feed.py
-This code is a ROS2 node that publishes camera feed data.
-
-Inputs: Camera feed via hardware interface
-Outputs: Published camera feed image to 'camera_feed' topic
-'''
-
-def main():
-    print('Camera feed node is running.')
-    # Placeholder for camera feed logic
 
 if __name__ == '__main__':
     main()
