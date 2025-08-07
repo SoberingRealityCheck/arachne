@@ -127,18 +127,48 @@ services:
        - /home/clay/ros:/home/ros
        - /home/clay/arachne:/ros2
        - /dev:/dev  # Mount /dev for hardware access
+       - /sys:/sys:ro  # Mount /sys for device detection
+       - /lib/modules:/lib/modules:ro  # Mount kernel modules
+       - /usr/src:/usr/src:ro  # Mount kernel headers if needed
+       - /run/udev:/run/udev:ro  # Mount udev runtime data
+       - /proc:/proc  # Mount proc filesystem (needs write access for container init)
+       - /usr/share/libcamera:/usr/share/libcamera:ro  # Mount libcamera IPA files
      devices:
         - "/dev/video0:/dev/video0"  # Assuming the camera is at /dev/video0
+        - "/dev/media0:/dev/media0"  # Media controller device
+        - "/dev/v4l-subdev0:/dev/v4l-subdev0"  # V4L2 subdevices
+        - "/dev/v4l-subdev1:/dev/v4l-subdev1"
+        - "/dev/v4l-subdev2:/dev/v4l-subdev2"
+        - "/dev/v4l-subdev3:/dev/v4l-subdev3"
+     cap_add:
+        - SYS_MODULE    # Allow loading kernel modules
+        - SYS_RAWIO     # Allow raw I/O operations
+        - SYS_ADMIN     # Allow system administration operations
+        - MKNOD         # Allow creating device nodes
+        - DAC_OVERRIDE  # Bypass file permission checks
+        - SETUID        # Allow setuid operations
+        - SETGID        # Allow setgid operations
+     security_opt:
+        - apparmor:unconfined  # Disable AppArmor restrictions
+     environment:
+        - LIBCAMERA_LOG_LEVELS=*:DEBUG  # Enable debug logging for libcamera
+        - LIBCAMERA_IPA_CONFIG_PATH=/usr/share/libcamera/ipa
+        - LIBCAMERA_IPA_MODULE_PATH=/usr/lib/libcamera
+     group_add:
+        - video         # Add to video group
+        - dialout       # Add to dialout group (sometimes needed for hardware)
      networks:
         - ros2_network
+     privileged: true  # Required for camera access and module loading
      command: >
-       bash -c "cd ros2/ros2_ws && 
+       bash -c "/load_camera_modules.sh && 
+       cd ros2/ros2_ws && 
        source install/setup.sh && 
        source /ros_entrypoint.sh &&
        ros2 run arachne camera_node"
       # pip install picamera2 --break-system-packages &&
       # ros2 run arachne camera_feed_node"
-     privileged: true  # Required for camera access
+
  test_camera:
     build:
       context: ./camera
